@@ -2,6 +2,7 @@ package server
 
 import (
 	"fmt"
+	"io_bound/config"
 	"io_bound/models"
 	"log/slog"
 	"net/http"
@@ -26,20 +27,25 @@ func NewServer(tm AbstractTaskManager) *Server {
 	}
 }
 
-func (srv *Server) Run() error {
+func (srv *Server) setupRouter() *chi.Mux {
 	r := chi.NewRouter()
 
 	r.Post("/tasks", srv.Create)
 	r.Get("/tasks/{id}", srv.Get)
 	r.Delete("/tasks/{id}", srv.Delete)
 
-	srvPort := "8080"
-	srvAddr := "localhost:" + srvPort
+	slog.Info("router setup completed", "routes", []string{"POST /tasks", "GET /tasks/{id}", "DELETE /tasks/{id}"})
+	return r
+}
 
-	slog.Info("server started", "address", srvAddr)
-	if err := http.ListenAndServe(fmt.Sprintf(":%s", srvPort), r); err != nil {
-		slog.Error("Server failed", "error", err)
-		return err
+func (srv *Server) Run(cfg config.Config) error {
+	router := srv.setupRouter()
+	addr := fmt.Sprintf("%s:%s", cfg.Host, cfg.Port)
+
+	slog.Info("server starting", "host", cfg.Host, "port", cfg.Port, "address", addr)
+	if err := http.ListenAndServe(addr, router); err != nil {
+		slog.Error("server failed to start", "error", err, "address", addr)
+		return fmt.Errorf("failed to start server on %s: %w", addr, err)
 	}
 
 	return nil

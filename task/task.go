@@ -62,7 +62,7 @@ func (tm *TaskManager) CreateNewTask(taskName string) (models.Task, error) {
 
 	go func() {
 		startTime := time.Now()
-		duration := time.Duration(3+rand.Intn(3)) * time.Minute
+		duration := time.Duration(180+rand.Intn(121)) * time.Second
 		timer := time.After(duration)
 
 		t.Status = models.StatusRunning
