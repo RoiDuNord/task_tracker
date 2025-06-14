@@ -1,31 +1,46 @@
 package server
 
 import (
-	"io_bound/handlers"
-	"log"
+	"fmt"
+	"io_bound/models"
 	"log/slog"
 	"net/http"
 
 	"github.com/go-chi/chi"
 )
 
-func Run() {
-	srv := new()
+type AbstractTaskManager interface {
+	CreateNewTask(taskName string) (models.Task, error)
+	GetTaskByID(id string) (models.Task, error)
+	DeleteTask(id string) error
+}
+
+type Server struct {
+	tasker AbstractTaskManager
+}
+
+func NewServer(tm AbstractTaskManager) *Server {
+	slog.Info("server created")
+	return &Server{
+		tasker: tm,
+	}
+}
+
+func (srv *Server) Run() error {
 	r := chi.NewRouter()
 
 	r.Post("/tasks", srv.Create)
 	r.Get("/tasks/{id}", srv.Get)
 	r.Delete("/tasks/{id}", srv.Delete)
 
-	srvAddr := ":8080"
-	slog.Info("server started", "address", srvAddr)
-	if err := http.ListenAndServe(srvAddr, r); err != nil {
-		log.Fatalf("Server error: %v", err)
-		return
-	}
-}
+	srvPort := "8080"
+	srvAddr := "localhost:" + srvPort
 
-func new() *handlers.Server {
-	slog.Info("server created")
-	return &handlers.Server{}
+	slog.Info("server started", "address", srvAddr)
+	if err := http.ListenAndServe(fmt.Sprintf(":%s", srvPort), r); err != nil {
+		slog.Error("Server failed", "error", err)
+		return err
+	}
+
+	return nil
 }
