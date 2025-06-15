@@ -96,6 +96,6 @@ func markCompleted(task models.Task) models.Task {
 	task.Status = models.StatusCompleted
 	task.FinishTime = finished
 	task.Duration = float32(finished.Sub(task.CreationTime).Seconds())
-	task.Result = "Task completed successfully"
+	task.Result = models.ResultCompleted
 	return task
 }
